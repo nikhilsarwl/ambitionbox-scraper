@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AmbitionBox — Company Ratings Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1815;
+    --card: #201e1a;
+    --border: #2e2b25;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --amber: #d4813a;
+    --cream: #f0e6d0;
+    --muted: #7a7060;
+    --text: #e8dcc8;
+    --green: #5a9e6f;
+    --red: #b85c4a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 48px 60px 36px;
+    background: linear-gradient(135deg, #141210 0%, #1e1b16 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .header-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  header h1 span { color: var(--gold); }
+  .header-sub {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat {
+    flex: 1;
+    padding: 20px 30px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--gold-light);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* Controls */
+  .controls {
+    padding: 20px 60px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px 10px 38px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); font-size: 14px;
+  }
+  select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  select:focus { border-color: var(--gold); }
+  .count-badge {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .count-badge span { color: var(--gold); font-weight: 500; }
+
+  /* Table wrapper */
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 60px 60px;
+    background: var(--bg);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 32px;
+    font-size: 13px;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--gold);
+  }
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+  }
+  th:hover { color: var(--gold-light); }
+  th.sorted { color: var(--gold-light); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.5; font-size: 10px; }
+  th.sorted .sort-arrow { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    animation: fadeIn 0.3s ease both;
+  }
+  tbody tr:hover { background: var(--card); }
+  tbody tr:hover .company-link { color: var(--gold-light); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  td { padding: 14px 16px; vertical-align: middle; }
+
+  .td-rank {
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    width: 36px;
+    font-weight: 500;
+  }
+
+  .company-name {
+    font-weight: 500;
+    color: var(--cream);
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .company-link {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    margin-top: 2px;
+    transition: color 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .company-link:hover { color: var(--amber); text-decoration: underline; }
+
+  .industry-tag {
+    display: inline-block;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--gold);
+    padding: 2px 8px;
+    font-size: 10px;
+    border-radius: 2px;
+    margin: 2px 2px 2px 0;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .industry-tag.more {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .rating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .rating-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mini-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .mini-bar-bg {
+    width: 52px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .mini-val { font-size: 12px; color: var(--text); min-width: 24px; }
+  .mini-na { color: var(--muted); font-size: 11px; }
+
+  .reviews-cell {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .desc-cell {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: help;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+    font-size: 14px;
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 60px;
+    background: var(--surface);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  footer strong { color: var(--gold); font-weight: 500; }
+
+  @media (max-width: 768px) {
+    header, .controls, .table-wrap, footer { padding-left: 20px; padding-right: 20px; }
+    .stats-bar { flex-wrap: wrap; }
+    .stat { min-width: 50%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Data Report · AmbitionBox Scraper</div>
+  <h1>India's Top <span>50 Companies</span><br>Workplace Ratings</h1>
+  <div class="header-sub">Scraped from AmbitionBox &nbsp;·&nbsp; All ratings out of 5.0</div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><div class="stat-value" id="s-companies">50</div><div class="stat-label">Companies</div></div>
+  <div class="stat"><div class="stat-value" id="s-avg">—</div><div class="stat-label">Avg Rating</div></div>
+  <div class="stat"><div class="stat-value" id="s-reviews">—</div><div class="stat-label">Total Reviews</div></div>
+  <div class="stat"><div class="stat-value" id="s-top">—</div><div class="stat-label">Highest Rated</div></div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search company or industry…">
+  </div>
+  <select id="industryFilter">
+    <option value="">All Industries</option>
+  </select>
+  <select id="sortSelect">
+    <option value="overall_rating-desc">Rating: High → Low</option>
+    <option value="overall_rating-asc">Rating: Low → High</option>
+    <option value="total_reviews-desc">Reviews: Most</option>
+    <option value="total_reviews-asc">Reviews: Least</option>
+    <option value="company_name-asc">Name: A → Z</option>
+  </select>
+  <div class="count-badge">Showing <span id="showCount">50</span> of 50</div>
+</div>
+
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th data-col="company_name">Company <span class="sort-arrow">↕</span></th>
+        <th data-col="overall_rating" class="sorted">Rating <span class="sort-arrow">↓</span></th>
+        <th data-col="total_reviews">Reviews <span class="sort-arrow">↕</span></th>
+        <th>Industries</th>
+        <th>Salary</th>
+        <th>Job Security</th>
+        <th>Work-Life</th>
+        <th>Skill Dev</th>
+        <th>Culture</th>
+        <th>Career</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="no-results" id="noResults">No companies match your search.</div>
+</div>
+
+<footer>
+  <div>Source: <strong>AmbitionBox</strong> &nbsp;·&nbsp; 50 companies scraped</div>
+  <div>Assignment · Data Scraping Intern</div>
+</footer>
+
+<script>
+const RAW = [
+["TCS Reviews","https://www.ambitionbox.com/reviews/tcs-reviews",3.3,110000,"IT Services & Consulting | Internet | Financial Services | Education & Training | BPO","I interviewed with TCS for a GCP Looker role on March 14th and finally received my offer letter on April 15th, 2026...",2.5,3.8,3.5,3.2,3.2,2.3],
+["Accenture Reviews","https://www.ambitionbox.com/reviews/accenture-reviews",3.7,73500,"IT Services & Consulting | Analytics & KPO | Software Product | Management Consulting","Final Interviewed with Accenture on April 18, 2026, and haven't heard back. No calls, no emails from HR.",3.3,3.6,3.6,3.6,3.7,2.8],
+["Wipro Reviews","https://www.ambitionbox.com/reviews/wipro-reviews",3.6,65100,"IT Services & Consulting | BPO | Recruitment","I have worked in 2 companies. Currently in Cognizant and previously in Tech Mahindra.",3.0,3.7,3.6,3.5,3.6,2.9],
+["Cognizant Reviews","https://www.ambitionbox.com/reviews/cognizant-reviews",3.7,61500,"IT Services & Consulting","I've been with Cognizant for 17 years. I'm a Team Manager handling Account Management.",3.2,3.6,3.6,3.6,3.5,2.9],
+["Capgemini Reviews","https://www.ambitionbox.com/reviews/capgemini-reviews",3.6,53400,"IT Services & Consulting | Analytics & KPO | Banking | Software Product","After a full year of giving my best, I got a 0.8% hike. Not 8%. Not 2%. 0.8%.",3.0,3.8,3.8,3.6,3.6,2.8],
+["HDFC Bank Reviews","https://www.ambitionbox.com/reviews/hdfc-bank-reviews",3.8,52400,"Banking | Financial Services | Insurance | NBFC","Working as RM in HDFC Bank and getting good incentives quarterly.",3.4,3.9,3.5,3.8,3.6,3.1],
+["Infosys Reviews","https://www.ambitionbox.com/reviews/infosys-reviews",3.5,48800,"IT Services & Consulting","No Hikes Q1 FY27 Global Townhall. Same old story — 'we haven't decided yet.'",2.7,3.9,3.6,3.6,3.6,2.6],
+["HCLTech Reviews","https://www.ambitionbox.com/reviews/hcl-technologies-reviews",3.4,46000,"IT Services & Consulting | Education & Training | Hardware & Networking | Banking | Software Product | Telecom","Super stressed about the politics at HCLTech. I've been on the bench for 3 months.",2.8,3.6,3.5,3.2,3.3,2.5],
+["ICICI Bank Reviews","https://www.ambitionbox.com/reviews/icici-bank-reviews",4.0,45900,"Banking | Financial Services","I was looking through some public reviews for ICICI Bank. Someone mentioned getting timely support.",3.7,4.0,3.7,3.8,3.7,3.8],
+["Tech Mahindra Reviews","https://www.ambitionbox.com/reviews/tech-mahindra-reviews",3.4,43300,"IT Services & Consulting | Analytics & KPO | Engineering & Construction","I was released from the project without any prior notice. My access was suddenly revoked.",2.9,3.3,3.4,3.3,3.2,2.7],
+["Genpact Reviews","https://www.ambitionbox.com/reviews/genpact-reviews",3.6,42300,"Analytics & KPO | Financial Services | EdTech","People are talking about massive layoffs, not because of performance but due to restructuring.",3.0,3.9,3.6,3.5,3.5,2.9],
+["TP Reviews","https://www.ambitionbox.com/reviews/tp-reviews",3.9,38600,"BPO | IT Services & Consulting | Software Product","They have structure and career paths, but some aspects of the work environment are challenging.",3.7,3.8,3.8,3.8,3.7,3.5],
+["Jio Reviews","https://www.ambitionbox.com/reviews/jio-reviews",4.4,33600,"Telecom","Grateful to Jio and its leadership for the timely release of ratings, PLI and MSI.",4.3,4.4,4.3,4.4,4.3,4.1],
+["Axis Bank Reviews","https://www.ambitionbox.com/reviews/axis-bank-reviews",3.6,33200,"Banking | Financial Services","Noticing comments about HR at Axis Bank. Someone mentioned that HR has no structured process.",3.5,3.5,3.4,3.6,3.4,3.2],
+["Concentrix Corporation Reviews","https://www.ambitionbox.com/reviews/concentrix-corporation-reviews",3.6,32300,"BPO | Non-Profit | Recruitment | Software Product","A person who worked 6 months in international chat process is getting 29k CTC.",3.1,3.9,3.4,3.3,3.5,2.8],
+["Amazon Reviews","https://www.ambitionbox.com/reviews/amazon-reviews",3.9,31400,"Internet | Retail | Media & Entertainment | Software Product | IT Services & Consulting | Logistics","They underpaid me, made me work twice as hard, then said there's no need for the role.",3.8,3.5,3.8,3.6,4.0,3.2],
+["Reliance Retail Reviews","https://www.ambitionbox.com/reviews/reliance-retail-reviews",3.9,27400,"Retail | FMCG | Jewellery | Fashion & Textile | Beauty & Personal Care | Consumer Electronics","I've seen people get moved around without explanation or career discussion.",3.6,3.9,3.8,3.9,3.7,3.2],
+["iEnergizer Reviews","https://www.ambitionbox.com/reviews/ienergizer-reviews",4.6,27100,"BPO | IT Services & Consulting","From outside things look fine but insiders say recognition is inconsistent.",4.6,4.5,4.5,4.5,4.5,4.4],
+["LTIMindtree Reviews","https://www.ambitionbox.com/reviews/ltimindtree-reviews",3.6,26500,"IT Services & Consulting","Has anyone recently had a second-round interview at LTIMindtree for the Microsoft CRM role?",3.2,3.5,3.7,3.6,3.5,2.8],
+["IBM Reviews","https://www.ambitionbox.com/reviews/ibm-reviews",3.9,25800,"IT Services & Consulting | Financial Services | Emerging Technologies","The work-life balance is non-existent. The manager is creating a monopoly within the team.",3.5,3.9,4.0,3.9,3.9,3.0],
+["HDB Financial Services Reviews","https://www.ambitionbox.com/reviews/hdb-financial-services-reviews",3.9,25700,"NBFC | Financial Services | Banking","Employees are given targets to achieve using questionable methods.",3.4,3.8,3.8,3.8,3.7,3.3],
+["Larsen & Toubro Limited Reviews","https://www.ambitionbox.com/reviews/larsen-and-toubro-limited-reviews",3.9,23900,"Engineering & Construction | Industrial Machinery | Power | Real Estate | Defence & Aerospace | Oil & Gas","Higher management just moves problems around rather than fixing them.",3.8,4.0,3.4,3.9,3.6,3.3],
+["Deloitte Reviews","https://www.ambitionbox.com/reviews/deloitte-reviews",3.7,23200,"Management Consulting | IT Services & Consulting | Accounting & Auditing","I received an offer from Deloitte for 14.4 LPA (12 LPA fixed).",3.6,3.7,3.2,3.7,3.6,3.1],
+["Kotak Mahindra Bank Reviews","https://www.ambitionbox.com/reviews/kotak-mahindra-bank-reviews",3.6,22500,"Banking | Financial Services","Ongoing concerns about internal culture and promotion transparency.",3.4,3.6,3.5,3.5,3.4,3.1],
+["Reliance Industries Reviews","https://www.ambitionbox.com/reviews/reliance-industries-reviews",4.0,20200,"Oil & Gas | Engineering & Construction | Petrochemicals","Choosing between Dentsu and Reliance for an analytics role.",3.6,4.1,3.9,3.9,3.8,3.3],
+["Vodafone Idea Reviews","https://www.ambitionbox.com/reviews/vodafone-idea-reviews",3.9,17600,"Telecom","Long-term stability seems like a real concern given recent developments.",3.9,3.7,3.8,3.7,3.8,3.3],
+["Bharti Airtel Reviews","https://www.ambitionbox.com/reviews/bharti-airtel-reviews",3.8,17100,"Telecom","Work-life balance concerns are common. Employees mention extended working hours.",3.7,3.6,3.6,3.7,3.6,3.2],
+["BYJU'S Reviews","https://www.ambitionbox.com/reviews/byjus-reviews",3.2,16400,"EdTech | Internet | Education & Training","Politics, nepotism, favoritism. No support from senior consultants.",3.5,2.4,2.8,3.1,2.8,2.9],
+["WNS Reviews","https://www.ambitionbox.com/reviews/wns-reviews",3.3,15300,"IT Services & Consulting | Food Processing","Senior Associate at WNS. Management micromanages breaks for no reason.",2.9,3.5,3.3,3.0,3.1,2.6],
+["IDFC FIRST Bank Reviews","https://www.ambitionbox.com/reviews/idfc-first-bank-reviews",3.9,14600,"Banking | Financial Services","Good incentives quarterly but offer comparison shows room for growth.",3.9,3.7,3.8,3.8,3.7,3.5],
+["Ernst & Young Reviews","https://www.ambitionbox.com/reviews/ernst-young-reviews",3.4,14600,"Management Consulting","Senior Associate role in Big4 on risk and data privacy side.",3.2,3.6,3.0,3.5,3.1,2.9],
+["IndusInd Bank Reviews","https://www.ambitionbox.com/reviews/indusind-bank-reviews",3.4,14300,"Banking | Financial Services","Reviews mention toxic leadership, management issues, and high attrition.",3.3,3.4,3.4,3.2,3.1,3.0],
+["AU Small Finance Bank Reviews","https://www.ambitionbox.com/reviews/au-small-finance-bank-reviews",3.8,14200,"Banking | Financial Services","Work-life balance concerns, holidays are limited for branch staff.",3.8,3.7,3.7,3.7,3.6,3.5],
+["Tata Motors Reviews","https://www.ambitionbox.com/reviews/tata-motors-reviews",4.1,14200,"Automobile","Something changed around management and HR practices recently.",3.8,4.1,4.0,4.0,4.0,3.4],
+["Muthoot FinCorp Reviews","https://www.ambitionbox.com/reviews/muthoot-fincorp-reviews",4.5,13200,"NBFC | Financial Services","An employee mentioned 12 years of service with decent stability.",4.1,4.4,4.4,4.5,4.5,4.1],
+["Bajaj Finserv Reviews","https://www.ambitionbox.com/reviews/bajaj-finserv-reviews",4.0,13100,"NBFC | FinTech","Considering an offer from Bajaj Finserv for a cyber security role in Pune.",4.0,3.8,3.6,3.9,3.6,3.6],
+["Flipkart Reviews","https://www.ambitionbox.com/reviews/flipkart-reviews",3.9,13000,"Internet | Retail","Managers are interacting with teams differently. Some concerns flagged.",3.8,3.7,3.7,3.8,3.7,3.3],
+["PwC Reviews","https://www.ambitionbox.com/reviews/pwc-reviews",3.3,12600,"Management Consulting | Accounting & Auditing","Comparing offers: LTTS vs PwC for a senior developer role.",3.3,3.4,3.0,3.4,3.2,2.8],
+["Mahindra & Mahindra Reviews","https://www.ambitionbox.com/reviews/mahindra-and-mahindra-reviews",4.0,12100,"Automobile | Industrial Machinery | Retail | Urban Transport","Hiring process for a Deputy Manager role at M&M for mid-level professionals.",3.7,4.0,3.8,3.9,3.8,3.4],
+["Infosys BPM Reviews","https://www.ambitionbox.com/reviews/infosys-bpm-reviews",3.5,12100,"BPO | Financial Services","Thinking of joining a service desk as a fresher but doubting after reading reviews.",2.7,4.1,3.5,3.5,3.6,2.7],
+["HDFC Life Reviews","https://www.ambitionbox.com/reviews/hdfc-life-reviews",3.8,12100,"Insurance | Financial Services","What was promised wasn't always delivered in terms of role scope.",3.7,3.7,3.7,3.8,3.7,3.5],
+["DXC Technology Reviews","https://www.ambitionbox.com/reviews/dxc-technology-reviews",3.6,12000,"IT Services & Consulting","Managers are appointed without relevant leadership experience.",3.0,3.6,3.8,3.5,3.5,2.6],
+["Bandhan Bank Reviews","https://www.ambitionbox.com/reviews/bandhan-bank-reviews",3.7,11200,"Banking | Financial Services","Promotion processes are causing real friction within the organisation.",3.5,3.7,3.6,3.4,3.5,3.2],
+["Digitide Solutions Reviews","https://www.ambitionbox.com/reviews/conneqt-business-solutions-reviews",3.5,10400,"IT Services & Consulting","Recurring issue: employees not receiving timely salary or increments.",3.0,3.4,3.4,3.4,3.3,2.9],
+["Mphasis Reviews","https://www.ambitionbox.com/reviews/mphasis-reviews",3.3,10300,"IT Services & Consulting | Hardware & Networking | Insurance | Financial Services","From outside things look fine, but the actual experience is different.",2.7,3.4,3.5,3.2,3.2,2.4],
+["Yes Bank Reviews","https://www.ambitionbox.com/reviews/yes-bank-reviews",3.7,10200,"Banking | Financial Services","There's a real push for skill development and good work-life balance at Yes Bank.",3.7,3.3,3.6,3.4,3.4,3.3],
+["Tata Steel Reviews","https://www.ambitionbox.com/reviews/tata-steel-reviews",4.0,9900,"Iron & Steel | Metals & Mining | Power","From the outside, Tata Steel seems stable. Internally some concerns.",3.5,4.0,4.0,3.9,3.9,3.2],
+["Quess Reviews","https://www.ambitionbox.com/reviews/quess-reviews",3.8,9800,"Recruitment","From the outside things look steady, but the experience is more complicated.",3.5,3.4,3.7,3.5,3.6,3.1],
+["Asian Paints Reviews","https://www.ambitionbox.com/reviews/asian-paints-reviews",3.9,9600,"Chemicals | Retail","Asian Paints looks profitable but employees face a tough situation inside.",4.2,3.8,3.5,3.9,3.7,3.3],
+["Maruti Suzuki Reviews","https://www.ambitionbox.com/reviews/maruti-suzuki-reviews",4.1,9500,"Automobile","Extreme working hours, especially in the supply chain department.",4.2,4.2,3.9,4.0,3.9,3.8]
+];
+
+const COLS = ["company_name","profile_url","overall_rating","total_reviews","industries","description","rating_salary","rating_job_security","rating_work_life","rating_skill_dev","rating_culture","rating_career"];
+
+let data = RAW.map(r => {
+  const obj = {};
+  COLS.forEach((c,i) => obj[c] = r[i]);
+  // clean name
+  obj.company_name = obj.company_name.replace(/ Reviews$/i, '').trim();
+  return obj;
+});
+
+function ratingColor(v) {
+  if (!v || v === 'N/A') return '#4a4540';
+  if (v >= 4.0) return '#5a9e6f';
+  if (v >= 3.5) return '#c9a84c';
+  return '#b85c4a';
+}
+
+function formatReviews(n) {
+  if (!n || n === 'N/A') return '—';
+  if (n >= 100000) return (n/100000).toFixed(1) + 'L';
+  if (n >= 1000)   return (n/1000).toFixed(1) + 'k';
+  return n;
+}
+
+function miniBar(val) {
+  if (!val || val === 'N/A') return `<span class="mini-na">—</span>`;
+  const pct = (val / 5) * 100;
+  const col = ratingColor(val);
+  return `<div class="mini-bar-wrap">
+    <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+    <span class="mini-val">${val}</span>
+  </div>`;
+}
+
+function industryTags(str) {
+  if (!str || str === 'N/A') return '<span class="mini-na">—</span>';
+  const parts = str.split('|').map(s => s.trim()).filter(Boolean);
+  const show = parts.slice(0, 2);
+  const more = parts.length - 2;
+  let html = show.map(p => `<span class="industry-tag">${p}</span>`).join('');
+  if (more > 0) html += `<span class="industry-tag more">+${more}</span>`;
+  return html;
+}
+
+// Populate industry filter
+const allIndustries = new Set();
+data.forEach(d => {
+  if (d.industries && d.industries !== 'N/A')
+    d.industries.split('|').forEach(i => allIndustries.add(i.trim()));
+});
+const industrySelect = document.getElementById('industryFilter');
+[...allIndustries].sort().forEach(ind => {
+  const o = document.createElement('option');
+  o.value = ind; o.textContent = ind;
+  industrySelect.appendChild(o);
+});
+
+// Stats
+function updateStats(rows) {
+  const valid = rows.filter(r => r.overall_rating);
+  const avg = valid.length ? (valid.reduce((s,r) => s + r.overall_rating, 0) / valid.length).toFixed(2) : '—';
+  const totalRev = rows.reduce((s,r) => s + (r.total_reviews || 0), 0);
+  const top = rows.reduce((best,r) => (!best || (r.overall_rating||0) > (best.overall_rating||0)) ? r : best, null);
+  document.getElementById('s-companies').textContent = rows.length;
+  document.getElementById('s-avg').textContent = avg;
+  document.getElementById('s-reviews').textContent = totalRev >= 1000000 ? (totalRev/1000000).toFixed(1)+'M' : (totalRev/1000).toFixed(0)+'k';
+  document.getElementById('s-top').textContent = top ? top.company_name.split(' ')[0] : '—';
+  document.getElementById('showCount').textContent = rows.length;
+}
+
+function render(rows) {
+  const tbody = document.getElementById('tableBody');
+  const noRes = document.getElementById('noResults');
+  if (!rows.length) { tbody.innerHTML=''; noRes.style.display='block'; updateStats([]); return; }
+  noRes.style.display = 'none';
+  tbody.innerHTML = rows.map((r, i) => {
+    const col = ratingColor(r.overall_rating);
+    return `<tr style="animation-delay:${i*18}ms">
+      <td class="td-rank">${i+1}</td>
+      <td>
+        <div class="company-name">${r.company_name}</div>
+        <a class="company-link" href="${r.profile_url}" target="_blank">↗ ambitionbox.com</a>
+      </td>
+      <td>
+        <div class="rating-pill">
+          <div class="rating-dot" style="background:${col}"></div>
+          <span style="color:${col}">${r.overall_rating || '—'}</span>
+        </div>
+      </td>
+      <td class="reviews-cell">${formatReviews(r.total_reviews)}</td>
+      <td>${industryTags(r.industries)}</td>
+      <td>${miniBar(r.rating_salary)}</td>
+      <td>${miniBar(r.rating_job_security)}</td>
+      <td>${miniBar(r.rating_work_life)}</td>
+      <td>${miniBar(r.rating_skill_dev)}</td>
+      <td>${miniBar(r.rating_culture)}</td>
+      <td>${miniBar(r.rating_career)}</td>
+      <td><div class="desc-cell" title="${(r.description||'').replace(/"/g,'&quot;')}">${r.description || '—'}</div></td>
+    </tr>`;
+  }).join('');
+  updateStats(rows);
+}
+
+let sortCol = 'overall_rating', sortDir = -1;
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const ind = document.getElementById('industryFilter').value;
+  return data.filter(r => {
+    const matchQ = !q || r.company_name.toLowerCase().includes(q) || (r.industries||'').toLowerCase().includes(q);
+    const matchI = !ind || (r.industries||'').includes(ind);
+    return matchQ && matchI;
+  });
+}
+
+function getSorted(rows) {
+  return [...rows].sort((a,b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return ((av||0) - (bv||0)) * sortDir;
+  });
+}
+
+function refresh() { render(getSorted(getFiltered())); }
+
+document.getElementById('searchInput').addEventListener('input', refresh);
+document.getElementById('industryFilter').addEventListener('change', refresh);
+document.getElementById('sortSelect').addEventListener('change', e => {
+  const [col, dir] = e.target.value.split('-');
+  sortCol = col; sortDir = dir === 'desc' ? -1 : 1;
+  refresh();
+});
+
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+    document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-arrow').textContent = sortDir === -1 ? '↓' : '↑';
+    refresh();
+  });
+});
+
+refresh();
+</script>
+</body>
+</html>
